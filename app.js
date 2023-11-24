@@ -1,4 +1,4 @@
-import { readdir , readFileSync, writeFileSync} from "fs";
+import { readdir, readFileSync, writeFileSync} from "fs";
 import { join, extname } from 'path';
 
 import { transform } from "@svgr/core";
@@ -12,16 +12,16 @@ const customTemplate = (
 ) => {
   return tpl`
   // generated file from component library on 24.09.2023
-  import { colors } from '../../../assets/styleConstants'
+  import { colors, defaultIconSize } from '../../../assets/styleConstants'
   import type { IconProps } from '../iconLibrary.types'
 
   export const ${componentName} = (props: IconProps) => {
-    const color = props.color || colors.defaultIconColor
+    const color = props?.color ?? colors.defaultIconColor
+    const size = props?.size ?? defaultIconSize
     return ${jsx};
   }
   `;
 };
-
 
 export const config = {
   typescript: true,
@@ -39,8 +39,8 @@ export const config = {
   },
   svgProps: {
     fill: "{color}",
-    width: "{props.size}",
-    height: "{props.size}",
+    width: "{size}",
+    height: "{size}",
   },
   expandProps: false, // we dont want to spread props
   plugins: ["@svgr/plugin-jsx", "@svgr/plugin-prettier"],
