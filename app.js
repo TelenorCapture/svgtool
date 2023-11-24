@@ -2,6 +2,7 @@ import { readdir , readFileSync, writeFileSync} from "fs";
 import { join, extname } from 'path';
 
 import { transform } from "@svgr/core";
+import { optimize } from "svgo";
 
 import { toPascalCase } from "./utils.js";
 
@@ -25,7 +26,7 @@ const customTemplate = (
 export const config = {
   typescript: true,
   prettier: true,
-  prettierConfig: {
+  prettierConfig: { // copied from capweb
     bracketSpacing: true,
     bracketSameLine: true,
     tabWidth: 4,
@@ -42,7 +43,7 @@ export const config = {
     height: "{props.size}",
   },
   expandProps: false, // we dont want to spread props
-  plugins: ["@svgr/plugin-svgo", "@svgr/plugin-jsx", "@svgr/plugin-prettier"],
+  plugins: ["@svgr/plugin-jsx", "@svgr/plugin-prettier"],
   template: customTemplate,
 };
 
@@ -63,20 +64,32 @@ readdir(directoryPath, (err, files) => {
       const componentName = toPascalCase(file.replace(".svg", ""));
       const outFilePath = join(outputDirectoryPath, `${componentName}Icon.tsx`);
 
-      console.log('debug here', componentName)
       let svgContent = readFileSync(filePath, "utf8");
-      let optimisedContent = transform.sync(svgContent, config, {
-        componentName: componentName || "TEST",
+
+      // we could have used the plugin for svgr
+      // but I didnt want to figure out the config
+      let {data: optimised} = optimize(svgContent, {
+        plugins: [
+          {
+            name: "preset-default",
+            params: {
+              overrides: {
+                removeViewBox: false,
+              },
+            },
+          },
+        ],
       });
 
       const sizeBefore = Buffer.byteLength(svgContent, "utf8");
-      const sizeAfter = Buffer.byteLength(optimisedContent, "utf8");
+      const sizeAfter = Buffer.byteLength(optimised, "utf8");
+      
+      let iconToComponent = transform.sync(optimised, config, {
+        componentName: componentName,
+      });
 
-
-      writeFileSync(outFilePath, optimisedContent);
+      writeFileSync(outFilePath, iconToComponent);
       console.log(`Optimised ${file}: ${sizeBefore}b > ${sizeAfter}b`);
-
     }
   });
 });
-
