@@ -61,7 +61,7 @@ readdir(directoryPath, (err, files) => {
 
       const filePath = join(directoryPath, file);
       const componentName = toPascalCase(file.replace(".svg", ""));
-      const outFilePath = join(outputDirectoryPath, `${componentName}.tsx`);
+      const outFilePath = join(outputDirectoryPath, `${componentName}Icon.tsx`);
 
       console.log('debug here', componentName)
       let svgContent = readFileSync(filePath, "utf8");
